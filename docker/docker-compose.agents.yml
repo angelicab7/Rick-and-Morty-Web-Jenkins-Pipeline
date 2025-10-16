@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  # Build Node.js Jenkins agent
+  jenkins-agent-nodejs:
+    build:
+      context: .
+      dockerfile: Dockerfile.nodejs
+    image: jenkins-agent-nodejs:latest
+    container_name: jenkins-agent-nodejs-builder
+    command: echo "Build complete"
+
+  # Build Playwright Jenkins agent
+  jenkins-agent-playwright:
+    build:
+      context: .
+      dockerfile: Dockerfile.playwright
+    image: jenkins-agent-playwright:latest
+    container_name: jenkins-agent-playwright-builder
+    command: echo "Build complete"

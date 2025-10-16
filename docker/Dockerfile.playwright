@@ -1,0 +1,24 @@
+# Dockerfile.playwright
+# Playwright agent for integration tests
+# Based on official Playwright image with pre-installed browsers
+
+FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
+
+USER root
+
+# Install basic tools
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python test dependencies
+RUN pip install --upgrade pip && \
+    pip install pytest pytest-playwright pytest-bdd allure-pytest pillow requests pytest-html
+
+# Ensure Playwright browsers are installed (Chromium)
+RUN playwright install --with-deps chromium
+
+WORKDIR /home/pwuser/workspace
+
+USER pwuser

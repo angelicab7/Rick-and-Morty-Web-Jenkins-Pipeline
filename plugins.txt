@@ -1,0 +1,36 @@
+# Jenkins Plugins Required for this Setup
+# Install these plugins in Jenkins
+
+# Core Pipeline Support
+workflow-aggregator:latest
+pipeline-stage-view:latest
+
+# Job DSL
+job-dsl:latest
+
+# Git Integration
+git:latest
+github:latest
+github-branch-source:latest
+
+# Credentials
+credentials:latest
+credentials-binding:latest
+
+# Docker Support
+docker-plugin:latest
+docker-workflow:latest
+
+# Allure Reporting
+allure-jenkins-plugin:latest
+
+# HTML Publishing
+htmlpublisher:latest
+
+# Configuration as Code (Optional but recommended)
+configuration-as-code:latest
+
+# Additional Useful Plugins
+timestamper:latest
+ws-cleanup:latest
+build-timeout:latest

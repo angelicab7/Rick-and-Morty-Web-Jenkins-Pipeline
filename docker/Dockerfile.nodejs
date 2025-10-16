@@ -1,0 +1,17 @@
+# Dockerfile.nodejs
+# Used by Jenkins Docker plugin to run pipeline stages
+
+FROM node:lts-alpine
+
+USER root
+
+# Install basic tools needed for builds
+RUN apk add --no-cache \
+    git \
+    openssh-client \
+    curl \
+    bash
+
+WORKDIR /home/node/workspace
+
+USER node
