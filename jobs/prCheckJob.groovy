@@ -47,9 +47,7 @@ pipelineJob('BOG001-data-lovers-pr-checks') {
         }
     }
 
-    orphanedItemStrategy {
-        discardOldItems {
-            numToKeep(20)
-        }
+    logRotator {
+        numToKeep(20)
     }
 }

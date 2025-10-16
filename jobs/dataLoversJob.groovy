@@ -31,9 +31,7 @@ pipelineJob('BOG001-data-lovers-main-pipeline') {
         }
     }
 
-    orphanedItemStrategy {
-        discardOldItems {
-            numToKeep(20)
-        }
+    logRotator {
+        numToKeep(20)
     }
 }

@@ -154,6 +154,15 @@ Jenkins → New Item
 
 Save → Click **Build Now**
 
+**First-time run will fail** - this is expected!
+
+Go to: **Manage Jenkins** → **In-process Script Approval**
+- You'll see pending signatures from the Job DSL scripts
+- Click **Approve** for each one
+- This is a security feature - you only need to do this once
+
+Go back to seed-job and click **Build Now** again.
+
 This creates two jobs:
 - `BOG001-data-lovers-pr-checks`
 - `BOG001-data-lovers-main-pipeline`
@@ -257,8 +266,9 @@ docker images | grep jenkins-agent
 ```
 
 **Seed job fails:**
-- Check GitHub credentials
-- Verify Job DSL plugin installed
+- First run? Go to Manage Jenkins → In-process Script Approval and approve pending scripts
+- Check GitHub credentials are correct
+- Verify Job DSL plugin is installed
 
 **Webhook doesn't trigger:**
 - Check webhook shows green checkmark in GitHub
