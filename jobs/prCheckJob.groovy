@@ -11,12 +11,12 @@ pipelineJob('BOG001-data-lovers-pr-checks') {
 
     // Trigger on PR events via GitHub webhook
     triggers {
-        githubPullRequest(
-            admins: ['angelicab7'],
-            orgWhitelist: ['angelicab7'],
-            cron: 'H/5 * * * *',
-            triggerPhrase: '.*test this please.*'
-        ) {
+        githubPullRequest {
+            admins(['angelicab7'])
+            orgWhitelist(['angelicab7'])
+            cron('H/5 * * * *')
+            triggerPhrase('.*test this please.*')
+
             extensions {
                 commitStatus {
                     context('Jenkins PR Check')
