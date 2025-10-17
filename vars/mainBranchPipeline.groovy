@@ -24,9 +24,11 @@ def call() {
             stage('Checkout Application') {
                 steps {
                     script {
-                        echo "Checking out frontend application..."
+                        echo "Checking out frontend application from BOG001-data-lovers..."
                         dir(env.APP_DIR) {
-                            checkout scm
+                            git branch: 'master',
+                                credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7',
+                                url: 'https://github.com/angelicab7/BOG001-data-lovers.git'
                         }
                     }
                 }
@@ -38,7 +40,7 @@ def call() {
                         echo "Checking out integration tests repository..."
                         dir(env.TEST_DIR) {
                             git branch: 'main',
-                                credentialsId: 'github-app-credentials',
+                                credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7',
                                 url: env.TEST_REPO_URL
                         }
                     }
@@ -54,7 +56,7 @@ def call() {
 
                             echo "Deploying to GitHub Pages..."
                             withCredentials([usernamePassword(
-                                credentialsId: 'github-app-credentials',
+                                credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7',
                                 usernameVariable: 'GIT_USERNAME',
                                 passwordVariable: 'GIT_TOKEN'
                             )]) {
