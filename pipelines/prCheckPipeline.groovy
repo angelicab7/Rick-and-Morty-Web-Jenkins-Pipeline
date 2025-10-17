@@ -103,7 +103,33 @@ pipeline {
         success {
             echo '✅ PR checks passed successfully!'
             script {
+                // Debug: Print all environment variables related to Git and GitHub
+                echo "=== DEBUG: Git Environment Variables ==="
+                echo "GIT_URL: ${env.GIT_URL}"
+                echo "GIT_COMMIT: ${env.GIT_COMMIT}"
+                echo "GIT_BRANCH: ${env.GIT_BRANCH}"
+                echo "BUILD_URL: ${env.BUILD_URL}"
+                echo "WORKSPACE: ${env.WORKSPACE}"
+
+                // Print PR-specific variables
+                echo "=== DEBUG: PR Variables ==="
+                echo "pr_number: ${env.pr_number}"
+                echo "pr_head_sha: ${env.pr_head_sha}"
+                echo "pr_head_ref: ${env.pr_head_ref}"
+                echo "pr_base_ref: ${env.pr_base_ref}"
+
+                // Check what repository context Jenkins thinks we're in
+                echo "=== DEBUG: Workspace Git Config ==="
+                sh 'git config --get remote.origin.url || echo "No remote.origin.url"'
+                sh 'git rev-parse HEAD || echo "No HEAD"'
+
                 // Publish check to the APPLICATION repository (BOG001-data-lovers), not the pipeline repo
+                echo "=== DEBUG: Publishing check with following params ==="
+                echo "  name: Jenkins PR Check"
+                echo "  title: PR #${env.pr_number}: Unit Tests Passed"
+                echo "  conclusion: SUCCESS"
+                echo "  commit SHA: ${env.pr_head_sha}"
+
                 publishChecks(
                     name: 'Jenkins PR Check',
                     title: "PR #${env.pr_number}: Unit Tests Passed",
@@ -121,11 +147,19 @@ pipeline {
                     detailsURL: "${env.BUILD_URL}",
                     status: io.jenkins.plugins.checks.api.ChecksStatus.COMPLETED
                 )
+
+                echo "=== DEBUG: publishChecks completed ==="
             }
         }
         failure {
             echo '❌ PR checks failed. Please fix the issues.'
             script {
+                // Debug logging
+                echo "=== DEBUG: Git Environment Variables ==="
+                echo "GIT_URL: ${env.GIT_URL}"
+                echo "GIT_COMMIT: ${env.GIT_COMMIT}"
+                echo "GIT_BRANCH: ${env.GIT_BRANCH}"
+
                 // Publish check to the APPLICATION repository (BOG001-data-lovers), not the pipeline repo
                 publishChecks(
                     name: 'Jenkins PR Check',
