@@ -130,11 +130,13 @@ pipeline {
                 echo "  conclusion: SUCCESS"
                 echo "  commit SHA: ${env.pr_head_sha}"
 
-                publishChecks(
-                    name: 'Jenkins PR Check',
-                    title: "PR #${env.pr_number}: Unit Tests Passed",
-                    summary: 'All unit tests, linting, and HTML validation passed successfully.',
-                    text: """
+                // Try GitHub Checks API
+                try {
+                    publishChecks(
+                        name: 'Jenkins PR Check',
+                        title: "PR #${env.pr_number}: Unit Tests Passed",
+                        summary: 'All unit tests, linting, and HTML validation passed successfully.',
+                        text: """
 ## Test Results
 - ✅ Unit Tests: Passed
 - ✅ ESLint: Passed
@@ -142,13 +144,31 @@ pipeline {
 
 [View Full Build Log](${env.BUILD_URL}console)
 [View Coverage Report](${env.BUILD_URL}Code_Coverage_Report/)
-                    """,
-                    conclusion: 'SUCCESS',
-                    detailsURL: "${env.BUILD_URL}",
-                    status: io.jenkins.plugins.checks.api.ChecksStatus.COMPLETED
-                )
+                        """,
+                        conclusion: 'SUCCESS',
+                        detailsURL: "${env.BUILD_URL}",
+                        status: io.jenkins.plugins.checks.api.ChecksStatus.COMPLETED
+                    )
+                    echo "=== DEBUG: publishChecks completed successfully ==="
+                } catch (Exception e) {
+                    echo "=== DEBUG: publishChecks failed with error: ${e.message} ==="
+                    echo "Stack trace: ${e}"
+                }
 
-                echo "=== DEBUG: publishChecks completed ==="
+                // Also publish using Commit Status API as backup
+                echo "=== DEBUG: Publishing commit status as backup ==="
+                step([
+                    $class: 'GitHubCommitStatusSetter',
+                    contextSource: [$class: 'ManuallyEnteredCommitContextSource', context: 'Jenkins PR Check'],
+                    statusResultSource: [$class: 'ConditionalStatusResultSource',
+                        results: [
+                            [$class: 'AnyBuildResult', message: 'All tests passed!', state: 'SUCCESS']
+                        ]
+                    ],
+                    reposSource: [$class: 'ManuallyEnteredRepositorySource', url: 'https://github.com/angelicab7/BOG001-data-lovers'],
+                    commitShaSource: [$class: 'ManuallyEnteredShaSource', sha: "${env.pr_head_sha}"]
+                ])
+                echo "=== DEBUG: Commit status published ==="
             }
         }
         failure {
@@ -160,21 +180,38 @@ pipeline {
                 echo "GIT_COMMIT: ${env.GIT_COMMIT}"
                 echo "GIT_BRANCH: ${env.GIT_BRANCH}"
 
-                // Publish check to the APPLICATION repository (BOG001-data-lovers), not the pipeline repo
-                publishChecks(
-                    name: 'Jenkins PR Check',
-                    title: "PR #${env.pr_number}: Tests Failed",
-                    summary: 'Some tests or checks failed. Please review the build logs.',
-                    text: """
+                // Try GitHub Checks API
+                try {
+                    publishChecks(
+                        name: 'Jenkins PR Check',
+                        title: "PR #${env.pr_number}: Tests Failed",
+                        summary: 'Some tests or checks failed. Please review the build logs.',
+                        text: """
 ## Test Results
 ❌ One or more checks failed
 
 [View Full Build Log](${env.BUILD_URL}console)
-                    """,
-                    conclusion: 'FAILURE',
-                    detailsURL: "${env.BUILD_URL}",
-                    status: io.jenkins.plugins.checks.api.ChecksStatus.COMPLETED
-                )
+                        """,
+                        conclusion: 'FAILURE',
+                        detailsURL: "${env.BUILD_URL}",
+                        status: io.jenkins.plugins.checks.api.ChecksStatus.COMPLETED
+                    )
+                } catch (Exception e) {
+                    echo "=== DEBUG: publishChecks failed: ${e.message} ==="
+                }
+
+                // Also publish using Commit Status API
+                step([
+                    $class: 'GitHubCommitStatusSetter',
+                    contextSource: [$class: 'ManuallyEnteredCommitContextSource', context: 'Jenkins PR Check'],
+                    statusResultSource: [$class: 'ConditionalStatusResultSource',
+                        results: [
+                            [$class: 'AnyBuildResult', message: 'Tests failed', state: 'FAILURE']
+                        ]
+                    ],
+                    reposSource: [$class: 'ManuallyEnteredRepositorySource', url: 'https://github.com/angelicab7/BOG001-data-lovers'],
+                    commitShaSource: [$class: 'ManuallyEnteredShaSource', sha: "${env.pr_head_sha}"]
+                ])
             }
         }
     }
