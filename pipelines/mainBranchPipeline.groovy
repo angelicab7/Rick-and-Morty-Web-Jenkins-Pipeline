@@ -149,35 +149,43 @@ pipeline {
                                     -v \
                                     --base-url=http://localhost:${env.SERVER_PORT} || true
                             """
+
+                            // Stash test results to use outside Docker container
+                            echo "Stashing test results for report generation..."
+                            stash includes: 'allure-results/**, allure-screenshots/**, report.html', name: 'test-results', allowEmpty: true
                         }
                     }
                 }
+            }
+        }
 
-                stage('Generate Reports') {
-                    steps {
-                        script {
-                            echo "Publishing test reports..."
+        stage('Generate Reports') {
+            agent any  // Run on Jenkins host where Allure tool is installed
+            steps {
+                script {
+                    echo "Unstashing test results..."
+                    unstash 'test-results'
 
-                            // Publish Allure Report (always publish, even on failure)
-                            allure([
-                                includeProperties: false,
-                                jdk: '',
-                                properties: [],
-                                reportBuildPolicy: 'ALWAYS',
-                                results: [[path: 'allure-results']]
-                            ])
+                    echo "Generating Allure report..."
+                    // Publish Allure Report using Jenkins host's Allure installation
+                    allure([
+                        includeProperties: false,
+                        jdk: '',
+                        properties: [],
+                        reportBuildPolicy: 'ALWAYS',
+                        results: [[path: 'allure-results']]
+                    ])
 
-                            // Publish HTML Report
-                            publishHTML([
-                                allowMissing: true,
-                                alwaysLinkToLastBuild: true,
-                                keepAll: true,
-                                reportDir: '.',
-                                reportFiles: 'report.html',
-                                reportName: 'Integration Test Report'
-                            ])
-                        }
-                    }
+                    echo "Publishing HTML test report..."
+                    // Publish HTML Report
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: '.',
+                        reportFiles: 'report.html',
+                        reportName: 'Integration Test Report'
+                    ])
                 }
             }
         }
