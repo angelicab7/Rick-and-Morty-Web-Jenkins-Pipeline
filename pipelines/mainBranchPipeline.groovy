@@ -29,7 +29,7 @@ pipeline {
                                 branches: [[name: 'main']],
                                 userRemoteConfigs: [[
                                     url: 'https://github.com/angelicab7/BOG001-data-lovers.git',
-                                    credentialsId: 'github-app-credentials'
+                                    credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7'
                                 ]]
                             ])
                         }
@@ -59,7 +59,7 @@ pipeline {
                         script {
                             echo "Deploying to GitHub Pages..."
                             withCredentials([usernamePassword(
-                                credentialsId: 'github-app-credentials',
+                                credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7',
                                 usernameVariable: 'GIT_USERNAME',
                                 passwordVariable: 'GIT_TOKEN'
                             )]) {
@@ -132,7 +132,7 @@ pipeline {
                                 branches: [[name: 'main']],
                                 userRemoteConfigs: [[
                                     url: env.TEST_REPO_URL,
-                                    credentialsId: 'github-app-credentials'
+                                    credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7'
                                 ]]
                             ])
                         }

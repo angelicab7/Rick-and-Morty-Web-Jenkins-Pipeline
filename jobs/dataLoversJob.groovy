@@ -1,6 +1,5 @@
 // jobs/dataLoversJob.groovy
 // Job DSL for main branch pipeline - references external Groovy pipeline script
-// FULLY CENTRALIZED - No code in application repo, proper Groovy with IDE support
 
 pipelineJob('BOG001-data-lovers-main-pipeline') {
     description('Main branch pipeline: Deploy to GitHub Pages and run integration tests with Allure reporting')
@@ -22,7 +21,7 @@ pipelineJob('BOG001-data-lovers-main-pipeline') {
                 git {
                     remote {
                         url('https://github.com/angelicab7/Rick-and-Morty-Web-Jenkins-Pipeline.git')
-                        credentials('github-app-credentials')
+                        credentials('0c90ddec-1d22-41c9-ba8b-bbce09886bc7')
                     }
                     branches('main')
                 }

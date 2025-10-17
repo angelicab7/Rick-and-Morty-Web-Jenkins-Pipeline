@@ -124,7 +124,7 @@ Add:
 - **Retrieval method:** Modern SCM
 - **Source Code Management:** Git
 - **Project Repository:** `https://github.com/angelicab7/Rick-and-Morty-Web-Jenkins-Pipeline.git`
-- **Credentials:** (select your GitHub App credentials)
+- **Credentials:** Select your GitHub App credentials (ID: `0c90ddec-1d22-41c9-ba8b-bbce09886bc7`)
 
 Save.
 
@@ -139,7 +139,7 @@ Jenkins → New Item
 **Source Code Management:**
 - Git
 - Repository URL: `https://github.com/angelicab7/Rick-and-Morty-Web-Jenkins-Pipeline.git`
-- Credentials: (select your GitHub App credentials)
+- Credentials: Select your GitHub App credentials (ID: `0c90ddec-1d22-41c9-ba8b-bbce09886bc7`)
 - Branch: `main`
 
 **Build Triggers:**

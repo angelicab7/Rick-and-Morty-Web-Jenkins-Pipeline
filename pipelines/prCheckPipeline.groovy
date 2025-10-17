@@ -20,7 +20,7 @@ pipeline {
                         branches: [[name: '${sha1}']],
                         userRemoteConfigs: [[
                             url: 'https://github.com/angelicab7/BOG001-data-lovers.git',
-                            credentialsId: 'github-app-credentials',
+                            credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7',
                             refspec: '+refs/pull/*:refs/remotes/origin/pr/*'
                         ]]
                     ])
