@@ -23,10 +23,10 @@ pipeline {
                 stage('Checkout Application') {
                     steps {
                         script {
-                            echo "Checking out frontend application from main branch..."
+                            echo "Checking out frontend application from BOG001-data-lovers/master..."
                             checkout([
                                 $class: 'GitSCM',
-                                branches: [[name: 'main']],
+                                branches: [[name: 'master']],
                                 userRemoteConfigs: [[
                                     url: 'https://github.com/angelicab7/BOG001-data-lovers.git',
                                     credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7'
