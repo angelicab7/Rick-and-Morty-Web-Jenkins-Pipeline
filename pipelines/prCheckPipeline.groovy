@@ -10,6 +10,11 @@ pipeline {
         }
     }
 
+    options {
+        // Skip the automatic checkout of the pipeline repo - we'll manually checkout the app repo instead
+        skipDefaultCheckout()
+    }
+
     stages {
         stage('Checkout') {
             steps {
