@@ -57,15 +57,14 @@ pipeline {
                 stage('Deploy to GitHub Pages') {
                     steps {
                         script {
-                            echo "Deploying to GitHub Pages..."
-                            sh '''
-                                git config user.email "jenkins@ci.local"
-                                git config user.name "Jenkins CI"
-
-                                # GitHub App credentials work automatically with Git operations
-                                # The checkout step already configured authentication
-                                npm run deploy
-                            '''
+                            echo "Skipping GitHub Pages deployment (requires PAT for gh-pages tool)..."
+                            echo "GitHub App credentials don't work with gh-pages npm package"
+                            echo "To enable: Create a PAT and use it instead of GitHub App for this stage"
+                            // sh '''
+                            //     git config user.email "jenkins@ci.local"
+                            //     git config user.name "Jenkins CI"
+                            //     npm run deploy
+                            // '''
                         }
                     }
                 }
