@@ -10,25 +10,22 @@ multibranchPipelineJob('BOG001-data-lovers-pr-checks-multibranch') {
             id('bog001-data-lovers-repo')
             repoOwner('angelicab7')
             repository('BOG001-data-lovers')
-
-            // Use GitHub App credentials
             scanCredentialsId('0c90ddec-1d22-41c9-ba8b-bbce09886bc7')
+        }
+    }
 
-            // Discover branches and PRs
-            traits {
-                gitHubBranchDiscovery {
-                    strategyId(1) // Exclude branches that are also filed as PRs
-                }
-                gitHubPullRequestDiscovery {
-                    strategyId(1) // Merging the pull request with the current target branch revision
-                }
-                gitHubForkDiscovery {
-                    strategyId(1) // Merging the pull request with the current target branch revision
-                    trust {
-                        gitHubTrustPermissions()
-                    }
-                }
-            }
+    // Configure what to discover
+    configure {
+        def traits = it / sources / data / 'jenkins.branch.BranchSource' / source / traits
+        traits << 'org.jenkinsci.plugins.github__branch__source.BranchDiscoveryTrait' {
+            strategyId(1) // Exclude branches that are also filed as PRs
+        }
+        traits << 'org.jenkinsci.plugins.github__branch__source.OriginPullRequestDiscoveryTrait' {
+            strategyId(1) // Merging the pull request with the current target branch revision
+        }
+        traits << 'org.jenkinsci.plugins.github__branch__source.ForkPullRequestDiscoveryTrait' {
+            strategyId(1) // Merging the pull request with the current target branch revision
+            trust(class: 'org.jenkinsci.plugins.github_branch_source.ForkPullRequestDiscoveryTrait$TrustPermission')
         }
     }
 
