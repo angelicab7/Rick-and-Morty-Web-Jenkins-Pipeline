@@ -6,26 +6,25 @@ multibranchPipelineJob('BOG001-data-lovers-pr-checks-multibranch') {
 
     // Configure GitHub branch source
     branchSources {
-        github {
-            id('bog001-data-lovers-repo')
-            repoOwner('angelicab7')
-            repository('BOG001-data-lovers')
-            scanCredentialsId('0c90ddec-1d22-41c9-ba8b-bbce09886bc7')
-        }
-    }
-
-    // Configure what to discover
-    configure {
-        def traits = it / sources / data / 'jenkins.branch.BranchSource' / source / traits
-        traits << 'org.jenkinsci.plugins.github__branch__source.BranchDiscoveryTrait' {
-            strategyId(1) // Exclude branches that are also filed as PRs
-        }
-        traits << 'org.jenkinsci.plugins.github__branch__source.OriginPullRequestDiscoveryTrait' {
-            strategyId(1) // Merging the pull request with the current target branch revision
-        }
-        traits << 'org.jenkinsci.plugins.github__branch__source.ForkPullRequestDiscoveryTrait' {
-            strategyId(1) // Merging the pull request with the current target branch revision
-            trust(class: 'org.jenkinsci.plugins.github_branch_source.ForkPullRequestDiscoveryTrait$TrustPermission')
+        branchSource {
+            source {
+                github {
+                    id('bog001-data-lovers-repo')
+                    repoOwner('angelicab7')
+                    repository('BOG001-data-lovers')
+                    repositoryUrl('https://github.com/angelicab7/BOG001-data-lovers')
+                    configuredByUrl(true)
+                    credentialsId('0c90ddec-1d22-41c9-ba8b-bbce09886bc7')
+                    traits {
+                        gitHubBranchDiscovery {
+                            strategyId(1) // Exclude branches that are also filed as PRs
+                        }
+                        gitHubPullRequestDiscovery {
+                            strategyId(1) // Merging the pull request with the current target branch revision
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -43,8 +42,10 @@ multibranchPipelineJob('BOG001-data-lovers-pr-checks-multibranch') {
         }
     }
 
-    // Trigger configuration
+    // Trigger configuration - scan every 5 minutes
     triggers {
-        periodic(5) // Scan repository every 5 minutes
+        periodicFolderTrigger {
+            interval('5')
+        }
     }
 }
