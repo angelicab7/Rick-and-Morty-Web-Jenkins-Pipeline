@@ -12,6 +12,11 @@ job-dsl:latest
 git:latest
 github:latest
 github-branch-source:latest
+generic-webhook-trigger:latest
+
+# GitHub Checks Integration
+checks-api:latest
+github-checks:latest
 
 # Credentials
 credentials:latest

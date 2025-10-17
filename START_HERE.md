@@ -2,7 +2,9 @@
 
 **Prerequisites:**
 - Docker and Docker Compose installed
-- GitHub App credentials ready
+- GitHub App credentials ready with permissions:
+  - Repository permissions: Contents (read), Metadata (read), Checks (read & write), Pull requests (read & write)
+  - Subscribe to events: Push, Pull request
 
 Total time: ~45 minutes
 
@@ -55,6 +57,9 @@ Install:
 - Job DSL Plugin
 - Allure Plugin
 - HTML Publisher Plugin
+- Generic Webhook Trigger Plugin
+- Checks API Plugin
+- GitHub Checks Plugin
 
 (GitHub Branch Source and Pipeline plugins are already included)
 
@@ -169,20 +174,30 @@ This creates two jobs:
 
 ---
 
-## Step 8: Configure GitHub Webhook (5 min)
+## Step 8: Configure GitHub Webhooks (5 min)
+
+### 8.1 Main Branch Webhook (for main pipeline)
 
 Go to: https://github.com/angelicab7/BOG001-data-lovers/settings/hooks
 
 Add webhook:
 - **Payload URL:** `http://localhost:8080/github-webhook/`
 - **Content type:** `application/json`
-- **Events:** Pushes, Pull requests
+- **Events:** Just the push event
 - **Active:** ✓
 
-If Jenkins isn't publicly accessible, use ngrok:
+### 8.2 Pull Request Webhook (for PR checks)
+
+Add another webhook:
+- **Payload URL:** `http://localhost:8080/generic-webhook-trigger/invoke?token=BOG001-data-lovers-pr-checks`
+- **Content type:** `application/json`
+- **Events:** Pull requests
+- **Active:** ✓
+
+**Note:** If Jenkins isn't publicly accessible, use ngrok:
 ```bash
 ngrok http 8080
-# Use: https://your-id.ngrok.io/github-webhook/
+# Replace localhost:8080 with: https://your-id.ngrok.io in both webhook URLs
 ```
 
 ---

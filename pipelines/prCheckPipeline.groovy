@@ -14,14 +14,14 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    echo "Checking out PR branch..."
+                    echo "Checking out PR #${env.pr_number} (${env.pr_head_sha})..."
                     checkout([
                         $class: 'GitSCM',
-                        branches: [[name: '${sha1}']],
+                        branches: [[name: "${env.pr_head_sha}"]],
                         userRemoteConfigs: [[
                             url: 'https://github.com/angelicab7/BOG001-data-lovers.git',
                             credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7',
-                            refspec: '+refs/pull/*:refs/remotes/origin/pr/*'
+                            refspec: '+refs/pull/${pr_number}/head:refs/remotes/origin/PR-${pr_number}'
                         ]]
                     ])
                 }
@@ -81,9 +81,27 @@ pipeline {
         }
         success {
             echo '✅ PR checks passed successfully!'
+            script {
+                publishChecks(
+                    name: 'Jenkins PR Check',
+                    title: 'PR #${pr_number}: Unit Tests Passed',
+                    summary: 'All unit tests, linting, and HTML validation passed successfully.',
+                    conclusion: 'SUCCESS',
+                    detailsURL: "${env.BUILD_URL}"
+                )
+            }
         }
         failure {
             echo '❌ PR checks failed. Please fix the issues.'
+            script {
+                publishChecks(
+                    name: 'Jenkins PR Check',
+                    title: 'PR #${pr_number}: Tests Failed',
+                    summary: 'Some tests or checks failed. Please review the build logs.',
+                    conclusion: 'FAILURE',
+                    detailsURL: "${env.BUILD_URL}"
+                )
+            }
         }
     }
 }

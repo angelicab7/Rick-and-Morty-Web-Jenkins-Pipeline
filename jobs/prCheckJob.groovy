@@ -8,7 +8,44 @@ pipelineJob('BOG001-data-lovers-pr-checks') {
         githubProjectUrl('https://github.com/angelicab7/BOG001-data-lovers')
         pipelineTriggers {
             triggers {
-                githubPush()
+                genericTrigger {
+                    // Extract PR information from GitHub webhook payload
+                    genericVariables {
+                        genericVariable {
+                            key('action')
+                            value('$.action')
+                        }
+                        genericVariable {
+                            key('pr_number')
+                            value('$.number')
+                        }
+                        genericVariable {
+                            key('pr_head_sha')
+                            value('$.pull_request.head.sha')
+                        }
+                        genericVariable {
+                            key('pr_head_ref')
+                            value('$.pull_request.head.ref')
+                        }
+                        genericVariable {
+                            key('pr_base_ref')
+                            value('$.pull_request.base.ref')
+                        }
+                    }
+
+                    // Only trigger on PR opened, synchronize (new commits), or reopened events
+                    regexpFilterText('$action')
+                    regexpFilterExpression('^(opened|synchronize|reopened)$')
+
+                    // Unique token for this job's webhook endpoint
+                    token('BOG001-data-lovers-pr-checks')
+
+                    // Print information about what triggered the build
+                    printContributedVariables(true)
+                    printPostContent(true)
+
+                    causeString('GitHub PR #$pr_number')
+                }
             }
         }
     }
