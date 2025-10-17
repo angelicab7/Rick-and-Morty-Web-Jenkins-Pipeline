@@ -123,32 +123,27 @@ pipeline {
                 sh 'git config --get remote.origin.url || echo "No remote.origin.url"'
                 sh 'git rev-parse HEAD || echo "No HEAD"'
 
-                // Publish check to the APPLICATION repository (BOG001-data-lovers), not the pipeline repo
-                echo "=== DEBUG: Publishing check with following params ==="
-                echo "  name: Jenkins PR Check"
-                echo "  title: PR #${env.pr_number}: Unit Tests Passed"
-                echo "  conclusion: SUCCESS"
+                // Publish commit status to the APPLICATION repository (BOG001-data-lovers)
+                echo "=== DEBUG: Publishing commit status ==="
+                echo "  context: Jenkins PR Check"
+                echo "  state: SUCCESS"
                 echo "  commit SHA: ${env.pr_head_sha}"
+                echo "  repo: https://github.com/angelicab7/BOG001-data-lovers"
 
-                publishChecks(
-                    name: 'Jenkins PR Check',
-                    title: "PR #${env.pr_number}: Unit Tests Passed",
-                    summary: 'All unit tests, linting, and HTML validation passed successfully.',
-                    text: """
-## Test Results
-- ✅ Unit Tests: Passed
-- ✅ ESLint: Passed
-- ✅ HTML Validation: Passed
+                step([
+                    $class: 'GitHubCommitStatusSetter',
+                    contextSource: [$class: 'ManuallyEnteredCommitContextSource', context: 'Jenkins PR Check'],
+                    statusResultSource: [$class: 'ConditionalStatusResultSource',
+                        results: [
+                            [$class: 'AnyBuildResult', message: 'All tests passed!', state: 'SUCCESS']
+                        ]
+                    ],
+                    reposSource: [$class: 'ManuallyEnteredRepositorySource', url: 'https://github.com/angelicab7/BOG001-data-lovers'],
+                    commitShaSource: [$class: 'ManuallyEnteredShaSource', sha: "${env.pr_head_sha}"],
+                    credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7'
+                ])
 
-[View Full Build Log](${env.BUILD_URL}console)
-[View Coverage Report](${env.BUILD_URL}Code_Coverage_Report/)
-                    """,
-                    conclusion: 'SUCCESS',
-                    detailsURL: "${env.BUILD_URL}",
-                    status: io.jenkins.plugins.checks.api.ChecksStatus.COMPLETED
-                )
-
-                echo "=== DEBUG: publishChecks completed ==="
+                echo "=== DEBUG: Commit status published ==="
             }
         }
         failure {
@@ -160,21 +155,19 @@ pipeline {
                 echo "GIT_COMMIT: ${env.GIT_COMMIT}"
                 echo "GIT_BRANCH: ${env.GIT_BRANCH}"
 
-                // Publish check to the APPLICATION repository (BOG001-data-lovers), not the pipeline repo
-                publishChecks(
-                    name: 'Jenkins PR Check',
-                    title: "PR #${env.pr_number}: Tests Failed",
-                    summary: 'Some tests or checks failed. Please review the build logs.',
-                    text: """
-## Test Results
-❌ One or more checks failed
-
-[View Full Build Log](${env.BUILD_URL}console)
-                    """,
-                    conclusion: 'FAILURE',
-                    detailsURL: "${env.BUILD_URL}",
-                    status: io.jenkins.plugins.checks.api.ChecksStatus.COMPLETED
-                )
+                // Publish commit status to the APPLICATION repository (BOG001-data-lovers)
+                step([
+                    $class: 'GitHubCommitStatusSetter',
+                    contextSource: [$class: 'ManuallyEnteredCommitContextSource', context: 'Jenkins PR Check'],
+                    statusResultSource: [$class: 'ConditionalStatusResultSource',
+                        results: [
+                            [$class: 'AnyBuildResult', message: 'Tests failed', state: 'FAILURE']
+                        ]
+                    ],
+                    reposSource: [$class: 'ManuallyEnteredRepositorySource', url: 'https://github.com/angelicab7/BOG001-data-lovers'],
+                    commitShaSource: [$class: 'ManuallyEnteredShaSource', sha: "${env.pr_head_sha}"],
+                    credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7'
+                ])
             }
         }
     }
