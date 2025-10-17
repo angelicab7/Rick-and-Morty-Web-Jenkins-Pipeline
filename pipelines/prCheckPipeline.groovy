@@ -10,19 +10,16 @@ pipeline {
         }
     }
 
-    options {
-        // Publish checks to GitHub
-        githubProjectProperty(projectUrlStr: 'https://github.com/angelicab7/BOG001-data-lovers')
-    }
-
     stages {
         stage('Checkout') {
             steps {
                 script {
-                    echo "Checking out PR #${env.pr_number} (${env.pr_head_sha})..."
+                    echo "Checking out PR #${env.pr_number} from BOG001-data-lovers..."
+                    echo "PR Head SHA: ${env.pr_head_sha}"
+                    echo "PR Branch: ${env.pr_head_ref}"
 
-                    // Checkout the PR code
-                    checkout([
+                    // Checkout the PR code from the APPLICATION repository
+                    def checkoutInfo = checkout([
                         $class: 'GitSCM',
                         branches: [[name: "${env.pr_head_sha}"]],
                         userRemoteConfigs: [[
@@ -33,9 +30,13 @@ pipeline {
                         extensions: [[$class: 'CloneOption', depth: 1, shallow: true]]
                     ])
 
-                    // Set GitHub context for checks
+                    // Override Git context to point to the APPLICATION repo, not the pipeline repo
                     env.GIT_COMMIT = env.pr_head_sha
-                    env.GIT_URL = 'https://github.com/angelicab7/BOG001-data-lovers'
+                    env.GIT_URL = 'https://github.com/angelicab7/BOG001-data-lovers.git'
+                    env.GIT_BRANCH = env.pr_head_ref
+
+                    echo "Set GIT_URL to: ${env.GIT_URL}"
+                    echo "Set GIT_COMMIT to: ${env.GIT_COMMIT}"
                 }
             }
         }
@@ -97,44 +98,44 @@ pipeline {
         success {
             echo '✅ PR checks passed successfully!'
             script {
-                withChecks('Jenkins PR Check') {
-                    publishChecks(
-                        name: 'Jenkins PR Check',
-                        title: "PR #${env.pr_number}: Unit Tests Passed",
-                        summary: 'All unit tests, linting, and HTML validation passed successfully.',
-                        text: """
-                        ## Test Results
-                        - ✅ Unit Tests: Passed
-                        - ✅ ESLint: Passed
-                        - ✅ HTML Validation: Passed
+                // Publish check to the APPLICATION repository (BOG001-data-lovers), not the pipeline repo
+                publishChecks(
+                    name: 'Jenkins PR Check',
+                    title: "PR #${env.pr_number}: Unit Tests Passed",
+                    summary: 'All unit tests, linting, and HTML validation passed successfully.',
+                    text: """
+## Test Results
+- ✅ Unit Tests: Passed
+- ✅ ESLint: Passed
+- ✅ HTML Validation: Passed
 
-                        [View Full Build Log](${env.BUILD_URL}console)
-                        [View Coverage Report](${env.BUILD_URL}Code_Coverage_Report/)
-                        """,
-                        conclusion: 'SUCCESS',
-                        detailsURL: "${env.BUILD_URL}"
-                    )
-                }
+[View Full Build Log](${env.BUILD_URL}console)
+[View Coverage Report](${env.BUILD_URL}Code_Coverage_Report/)
+                    """,
+                    conclusion: 'SUCCESS',
+                    detailsURL: "${env.BUILD_URL}",
+                    status: io.jenkins.plugins.checks.api.ChecksStatus.COMPLETED
+                )
             }
         }
         failure {
             echo '❌ PR checks failed. Please fix the issues.'
             script {
-                withChecks('Jenkins PR Check') {
-                    publishChecks(
-                        name: 'Jenkins PR Check',
-                        title: "PR #${env.pr_number}: Tests Failed",
-                        summary: 'Some tests or checks failed. Please review the build logs.',
-                        text: """
-                        ## Test Results
-                        ❌ One or more checks failed
+                // Publish check to the APPLICATION repository (BOG001-data-lovers), not the pipeline repo
+                publishChecks(
+                    name: 'Jenkins PR Check',
+                    title: "PR #${env.pr_number}: Tests Failed",
+                    summary: 'Some tests or checks failed. Please review the build logs.',
+                    text: """
+## Test Results
+❌ One or more checks failed
 
-                        [View Full Build Log](${env.BUILD_URL}console)
-                        """,
-                        conclusion: 'FAILURE',
-                        detailsURL: "${env.BUILD_URL}"
-                    )
-                }
+[View Full Build Log](${env.BUILD_URL}console)
+                    """,
+                    conclusion: 'FAILURE',
+                    detailsURL: "${env.BUILD_URL}",
+                    status: io.jenkins.plugins.checks.api.ChecksStatus.COMPLETED
+                )
             }
         }
     }
