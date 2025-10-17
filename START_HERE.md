@@ -3,10 +3,16 @@
 **Prerequisites:**
 - Docker and Docker Compose installed
 - GitHub App credentials ready with permissions:
-  - Repository permissions: Contents (read), Metadata (read), Checks (read & write), Pull requests (read & write)
+  - Repository permissions:
+    - **Contents**: Read
+    - **Metadata**: Read
+    - **Checks**: Read & write
+    - **Commit statuses**: Read & write
+    - **Pull requests**: Read & write
   - Subscribe to events: Push, Pull request
+- GitHub App must be installed on the BOG001-data-lovers repository
 
-Total time: ~45 minutes
+Total time: ~50 minutes
 
 ---
 
@@ -169,82 +175,106 @@ Go to: **Manage Jenkins** → **In-process Script Approval**
 Go back to seed-job and click **Build Now** again.
 
 This creates two jobs:
-- `BOG001-data-lovers-pr-checks`
-- `BOG001-data-lovers-main-pipeline`
+- `BOG001-data-lovers-pr-checks-multibranch` (Multibranch Pipeline)
+- `BOG001-data-lovers-main-pipeline` (Regular Pipeline)
 
 ---
 
-## Step 8: Configure GitHub Webhooks (5 min)
+## Step 8: Add Jenkinsfile to BOG001-data-lovers (5 min)
 
-### 8.1 Main Branch Webhook (for main pipeline)
+The Multibranch Pipeline requires a `Jenkinsfile` in the application repository.
 
-Go to: https://github.com/angelicab7/BOG001-data-lovers/settings/hooks
+**Create the Jenkinsfile:**
 
-Add webhook:
-- **Payload URL:** `http://localhost:8080/github-webhook/`
-- **Content type:** `application/json`
-- **Events:** Just the push event
-- **Active:** ✓
+```bash
+cd ../BOG001-data-lovers
+git checkout master  # or main
 
-### 8.2 Pull Request Webhook (for PR checks)
+# Create minimal Jenkinsfile (3 lines)
+cat > Jenkinsfile << 'EOF'
+// All pipeline logic is in jenkins-shared-library
+@Library('jenkins-shared-library') _
+prCheck()
+EOF
 
-Add another webhook:
-- **Payload URL:** `http://localhost:8080/generic-webhook-trigger/invoke?token=BOG001-data-lovers-pr-checks`
-- **Content type:** `application/json`
-- **Events:** Pull requests
+git add Jenkinsfile
+git commit -m "Add minimal Jenkinsfile for Jenkins CI/CD"
+git push origin master
+```
+
+**Why this works:**
+- The Jenkinsfile is minimal (just 3 lines)
+- All actual pipeline logic lives in `vars/prCheck.groovy` in the Rick-and-Morty-Web-Jenkins-Pipeline repo
+- This allows GitHub Checks API to work correctly while keeping logic centralized
+
+---
+
+## Step 9: Configure GitHub App Webhook (3 min)
+
+### Configure Webhook URL in GitHub App
+
+Go to: **Settings → Developer settings → GitHub Apps → [Your App] → General**
+
+Scroll to **Webhook**:
+- **Webhook URL:** `http://localhost:8080/github-webhook/`
+- **Webhook secret:** (leave empty or set if desired)
 - **Active:** ✓
 
 **Note:** If Jenkins isn't publicly accessible, use ngrok:
 ```bash
 ngrok http 8080
-# Replace localhost:8080 with: https://your-id.ngrok.io in both webhook URLs
+# Use the ngrok URL: https://your-id.ngrok-free.app/github-webhook/
 ```
+
+### Verify Webhook Events
+
+In the same GitHub App settings, scroll to **Permissions & events** and verify:
+- **Subscribe to events:** Push, Pull request
+
+This single webhook handles both PR checks (via Multibranch Pipeline) and main branch deployments.
 
 ---
 
-## Step 9: Push Configuration (3 min)
+## Step 10: Trigger Repository Scan (2 min)
 
-```bash
-# Push this Jenkins repository
-cd Rick-and-Morty-Web-Jenkins-Pipeline
-git add .
-git commit -m "Add Jenkins as Code configuration"
-git push origin main
+After adding the Jenkinsfile, trigger Jenkins to discover branches and PRs:
 
-# Push requirements.txt to integration tests
-cd ../Rick-and-Morty-API-testing
-git add requirements.txt
-git commit -m "Add requirements.txt"
-git push origin main
+Go to Jenkins → `BOG001-data-lovers-pr-checks-multibranch` → Click **"Scan Repository Now"**
 
-# BOG001-data-lovers needs no changes
-```
+**Expected result:**
+- Jenkins scans the repository
+- Discovers the `master` branch
+- Creates a job for the master branch
+- Future PRs will be automatically discovered
 
 ---
 
-## Step 10: Test PR Pipeline (5 min)
+## Step 11: Test PR Pipeline (5 min)
 
 ```bash
-cd ../BOG001-data-lovers
-git checkout -b test-jenkins
-echo "// Test" >> src/main.js
+cd BOG001-data-lovers
+git checkout -b test-jenkins-checks
+echo "// Test GitHub Checks" >> src/main.js
 git add .
-git commit -m "Test Jenkins CI"
-git push origin test-jenkins
+git commit -m "Test Jenkins CI with GitHub Checks"
+git push origin test-jenkins-checks
 ```
 
 Create PR on GitHub.
 
 **Expected result:**
-- Jenkins job `BOG001-data-lovers-pr-checks` runs
+- Multibranch Pipeline automatically discovers the new PR
+- Jenkins creates a job for the PR branch
 - Unit tests execute
-- Status posted to PR
+- **GitHub Checks** appear in the PR with test results
 
-Check: Jenkins → `BOG001-data-lovers-pr-checks` → Latest build
+Check:
+- Jenkins → `BOG001-data-lovers-pr-checks-multibranch` → PR-XX branch
+- GitHub PR → Should show "Jenkins PR Check" with green checkmark
 
 ---
 
-## Step 11: Test Main Pipeline (5 min)
+## Step 12: Test Main Pipeline (5 min)
 
 Merge the PR on GitHub.
 
@@ -260,14 +290,18 @@ Check: Jenkins → `BOG001-data-lovers-main-pipeline` → Latest build → Allur
 
 ## Verification Checklist
 
-- [ ] Docker images built
-- [ ] Jenkins plugins installed
-- [ ] Docker configured in Jenkins
-- [ ] Shared library configured
-- [ ] Seed job created and ran
-- [ ] Two jobs created
-- [ ] GitHub webhook configured
-- [ ] Test PR ran successfully
+- [ ] Docker images built in jenkins-docker container
+- [ ] Jenkins plugins installed (including Checks API and GitHub Checks)
+- [ ] Docker cloud configured in Jenkins
+- [ ] Shared library configured (jenkins-shared-library)
+- [ ] GitHub App credentials added with correct permissions
+- [ ] Seed job created and ran successfully
+- [ ] Two jobs created (Multibranch + Main pipeline)
+- [ ] Jenkinsfile added to BOG001-data-lovers repository
+- [ ] GitHub App webhook configured
+- [ ] Multibranch Pipeline scanned and discovered branches
+- [ ] Test PR created and checks appeared in GitHub PR
+- [ ] GitHub Checks show green checkmark
 - [ ] Main pipeline ran and Allure Report visible
 
 ---
@@ -276,40 +310,70 @@ Check: Jenkins → `BOG001-data-lovers-main-pipeline` → Latest build → Allur
 
 **Docker agent won't start:**
 ```bash
-docker images | grep jenkins-agent
-# If missing, rebuild: cd docker && ./build-agents.sh
+# Check if images exist in jenkins-docker container
+docker exec jenkins-docker docker images | grep jenkins-agent
+
+# If missing, rebuild inside the container:
+cd docker
+cat Dockerfile.nodejs | docker exec -i jenkins-docker docker build -t jenkins-agent-nodejs:latest -
+cat Dockerfile.playwright | docker exec -i jenkins-docker docker build -t jenkins-agent-playwright:latest -
 ```
 
 **Seed job fails:**
 - First run? Go to Manage Jenkins → In-process Script Approval and approve pending scripts
-- Check GitHub credentials are correct
+- Check GitHub App credentials ID is `0c90ddec-1d22-41c9-ba8b-bbce09886bc7`
 - Verify Job DSL plugin is installed
+- Check error message for specific method signature issues
 
-**Webhook doesn't trigger:**
-- Check webhook shows green checkmark in GitHub
-- Use ngrok if testing locally
-- For PR webhook: verify token matches in webhook URL and job DSL
+**Multibranch Pipeline not discovering PRs:**
+- Click "Scan Repository Now" manually
+- Check GitHub App is installed on the repository
+- Verify GitHub App has correct permissions (Checks, Contents, Metadata, Pull requests)
+- Check Jenkins logs: Manage Jenkins → System Log
 
 **GitHub Checks not appearing in PR:**
-1. Verify GitHub App has "Checks: Read & Write" permission
-2. Go to your GitHub App settings → Installed → Repository access → Check that BOG001-data-lovers is included
-3. In Jenkins, verify the credential ID `0c90ddec-1d22-41c9-ba8b-bbce09886bc7` is your GitHub App credential
-4. Check Jenkins logs for errors: Manage Jenkins → System Log
-5. Verify the build ran and check console output for "GitHub check has been published" message
+1. **Most common:** Ensure `Jenkinsfile` exists in the BOG001-data-lovers repository
+2. Verify GitHub App has "Checks: Read & write" AND "Commit statuses: Read & write"
+3. Check that GitHub App webhook URL is configured correctly
+4. Go to GitHub App → Advanced → Recent Deliveries - should show successful (green checkmark) deliveries
+5. In Jenkins build console, look for "[GitHub Checks] GitHub check has been published"
+6. Verify the Multibranch Pipeline discovered the PR branch
+
+**Webhook shows 403 error:**
+- This means CSRF protection is blocking the request
+- Ensure webhook URL in GitHub App settings is correct
+- For GitHub Apps, use: `http://your-jenkins/github-webhook/`
+- Not: `http://your-jenkins/` (root path will give 403)
 
 **Tests fail:**
-- Check console output in Jenkins
+- Check console output in Jenkins Multibranch Pipeline → PR branch → Build
 - Verify Docker agents can start
-- Check application server starts correctly
+- Check that npm dependencies install correctly
 
 ---
 
 ## Done!
 
 You now have:
-- PR checks running automatically
-- Deployment pipeline to GitHub Pages
-- Integration tests with Allure reports
-- Everything as code
+- ✅ **Multibranch Pipeline** for automatic PR discovery and checks
+- ✅ **GitHub Checks API** integration - checks appear directly in PRs
+- ✅ **Centralized pipeline logic** in shared library
+- ✅ **Minimal Jenkinsfile** (3 lines) in application repo
+- ✅ **Deployment pipeline** to GitHub Pages
+- ✅ **Integration tests** with Allure reports
+- ✅ **Everything as code** with Job DSL and Docker
 
-For modifications, see README.md "Updating Pipelines" section.
+## Architecture Summary
+
+**Hybrid Approach Benefits:**
+- Pipeline logic centralized in `Rick-and-Morty-Web-Jenkins-Pipeline/vars/`
+- Minimal Jenkinsfile in `BOG001-data-lovers` (just calls shared library)
+- GitHub Checks API works correctly (requires Jenkinsfile in app repo)
+- Easy to standardize and maintain across multiple projects
+- Follows Jenkins best practices
+
+**To modify pipeline behavior:** Edit `vars/prCheck.groovy` in this repository
+
+**To onboard new repositories:** Add Job DSL + minimal Jenkinsfile
+
+For more details, see README.md "Updating Pipelines" section.
