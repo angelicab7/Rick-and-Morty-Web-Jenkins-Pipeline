@@ -12,7 +12,7 @@ multibranchPipelineJob('BOG001-data-lovers-pr-checks-multibranch') {
             repository('BOG001-data-lovers')
 
             // Use GitHub App credentials
-            credentialsId('0c90ddec-1d22-41c9-ba8b-bbce09886bc7')
+            scanCredentialsId('0c90ddec-1d22-41c9-ba8b-bbce09886bc7')
 
             // Discover branches and PRs
             traits {
