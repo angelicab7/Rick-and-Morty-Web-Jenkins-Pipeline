@@ -185,15 +185,9 @@ pipeline {
 
     post {
         always {
-            node {
-                script {
-                    echo "Cleanup: Stopping application server..."
-                    sh '''
-                        # Kill server process if it exists
-                        pkill -f "npm start" || true
-                        pkill -f "serve" || true
-                    '''
-                }
+            script {
+                // Cleanup doesn't need node context for echo
+                echo "✨ Pipeline execution completed. Check reports for details."
             }
         }
         success {
