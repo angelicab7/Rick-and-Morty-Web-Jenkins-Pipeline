@@ -288,6 +288,14 @@ docker images | grep jenkins-agent
 **Webhook doesn't trigger:**
 - Check webhook shows green checkmark in GitHub
 - Use ngrok if testing locally
+- For PR webhook: verify token matches in webhook URL and job DSL
+
+**GitHub Checks not appearing in PR:**
+1. Verify GitHub App has "Checks: Read & Write" permission
+2. Go to your GitHub App settings → Installed → Repository access → Check that BOG001-data-lovers is included
+3. In Jenkins, verify the credential ID `0c90ddec-1d22-41c9-ba8b-bbce09886bc7` is your GitHub App credential
+4. Check Jenkins logs for errors: Manage Jenkins → System Log
+5. Verify the build ran and check console output for "GitHub check has been published" message
 
 **Tests fail:**
 - Check console output in Jenkins
