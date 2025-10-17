@@ -1,0 +1,10 @@
+// Jenkinsfile for BOG001-data-lovers
+// This file should be placed at the root of the BOG001-data-lovers repository
+//
+// All pipeline logic is centralized in the jenkins-shared-library
+// This keeps the application repository clean and focused on code
+
+@Library('jenkins-shared-library') _
+
+// Call the shared library function for PR checks
+prCheck()
