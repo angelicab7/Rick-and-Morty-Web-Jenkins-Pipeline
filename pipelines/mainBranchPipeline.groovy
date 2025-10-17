@@ -58,20 +58,14 @@ pipeline {
                     steps {
                         script {
                             echo "Deploying to GitHub Pages..."
-                            withCredentials([string(
-                                credentialsId: '0c90ddec-1d22-41c9-ba8b-bbce09886bc7',
-                                variable: 'GITHUB_TOKEN'
-                            )]) {
-                                sh '''
-                                    git config user.email "jenkins@ci.local"
-                                    git config user.name "Jenkins CI"
+                            sh '''
+                                git config user.email "jenkins@ci.local"
+                                git config user.name "Jenkins CI"
 
-                                    # Configure git to use the GitHub token
-                                    git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/angelicab7/BOG001-data-lovers.git
-
-                                    npm run deploy
-                                '''
-                            }
+                                # GitHub App credentials work automatically with Git operations
+                                # The checkout step already configured authentication
+                                npm run deploy
+                            '''
                         }
                     }
                 }
